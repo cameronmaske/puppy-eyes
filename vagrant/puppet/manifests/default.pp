@@ -4,8 +4,13 @@ Exec {
 
 #Apt get update if older than a week!
 exec { 'apt-get update':
-    command => "/usr/bin/apt-get update && apt-get install -y libjpeg8 libjpeg8-dev libjpeg62-dev libfreetype6 libfreetype6-dev libpq-dev pep8 libevent-dev libgraphviz-dev libxslt1.1 libxslt1-dev python-libxslt1",
+    command => "/usr/bin/apt-get update && apt-get install -y libjpeg8-dev libjpeg-dev zlib1g-dev libpng12-dev",
     onlyif => "/bin/bash -c 'exit $(( $(( $(date +%s) - $(stat -c %Y /var/lib/apt/lists/$( ls /var/lib/apt/lists/ -tr1|tail -1 )) )) <= 604800 ))'"
+}
+
+exec { "pil_gotcha":
+    command => "ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib && ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib",
+    creates => "/usr/lib/libjpeg.so"
 }
 
 #Python
@@ -61,6 +66,8 @@ class venv_setup {
         file => '/home/vagrant/.bashrc',
     }
 }
+
+include venv_setup
 
 class heroku_toolbelt {
     # Install heroku toolbelt

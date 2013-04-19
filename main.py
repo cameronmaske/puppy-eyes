@@ -4,7 +4,7 @@ import requests
 import redis
 from PIL import Image
 from StringIO import StringIO
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, redirect
 
 #----------------------------------------
 # initialization
@@ -31,42 +31,47 @@ def hello():
     url = request.args.get('url')
     if not url:
         return "Woof woof!"
-    # Open redis.
-    r = redis.StrictRedis(
-        host=REDIS_URL.hostname, port=REDIS_URL.port,
-        password=REDIS_URL.password)
-    # Have we already cached the image?
-    cached = r.get(url)
-    if cached:
-        print "Got image from cache."
-        buffer_image = StringIO(cached)
-        buffer_image.seek(0)
-    else:
-        print "Downloading image."
-        # Download the image.
-        response = requests.get(url)
-        # Open the image.
-        image = Image.open(StringIO(response.content))
-        # Get it's current size.
-        (current_width, current_height) = image.size
-        # We want a width of 150px.
-        desired_width = 150
-        # But we want to keep the ratio the same.
-        ratio = float(current_width) / float(current_height)
-        # Determine a new hegiht.
-        height = int(desired_width / ratio)
+    try:
+        # Open redis.
+        r = redis.StrictRedis(
+            host=REDIS_URL.hostname, port=REDIS_URL.port,
+            password=REDIS_URL.password)
+        # Have we already cached the image?
+        cached = r.get(url)
+        if cached:
+            print "Got image from cache."
+            buffer_image = StringIO(cached)
+            buffer_image.seek(0)
+        else:
+            print "Downloading image."
+            # Download the image.
+            response = requests.get(url)
+            # Open the image.
+            image = Image.open(StringIO(response.content))
+            # Get it's current size.
+            (current_width, current_height) = image.size
+            # We want a width of 150px.
+            desired_width = 150
+            # But we want to keep the ratio the same.
+            ratio = float(current_width) / float(current_height)
+            # Determine a new hegiht.
+            height = int(desired_width / ratio)
 
-        buffer_image = StringIO()
-        resized_image = image.resize((desired_width, height), Image.ANTIALIAS)
-        resized_image.save(buffer_image, 'JPEG', quality=90)
-        buffer_image.seek(0)
-        r.setex(url, (60*60*5), buffer_image.getvalue())
-
-    return send_file(buffer_image, mimetype='image/jpeg')
+            buffer_image = StringIO()
+            resized_image = image.resize((desired_width, height), Image.ANTIALIAS)
+            resized_image.save(buffer_image, 'JPEG', quality=90)
+            buffer_image.seek(0)
+            r.setex(url, (60*60*5), buffer_image.getvalue())
+        # Serve the image.
+        return send_file(buffer_image, mimetype='image/jpeg')
+    except Exception as e:
+        print e
+        # Something we horribly wrong. Let's just redirect them to the url.
+        return redirect(url)
 
 
 #----------------------------------------
-# launch
+# launch - used in dev.
 #----------------------------------------
 
 if __name__ == "__main__":
