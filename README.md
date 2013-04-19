@@ -9,7 +9,7 @@ Install
 To install you require [Vagrant](http://downloads.vagrantup.com/tags/v1.1.5)(tested on 1.1.5).
 To bootup the VM use:
 
-    > vagrant up
+    vagrant up
 
 Setup an .env file with the following....
 
@@ -18,9 +18,10 @@ Setup an .env file with the following....
 
 Now you can to start the server run
 
-    > vagrant ssh
-    > python puppy-eyes/main.py
+    vagrant ssh
+    python puppy-eyes/main.py
                or
-    > foreman start -f Procfile-dev -p 8001
+    cd puppy-eyes
+    foreman start -f Procfile-dev -p 8001
 
 
