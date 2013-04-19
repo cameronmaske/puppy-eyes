@@ -1,0 +1,13 @@
+*.pyc
+*.pyo
+*~
+.DS_Store
+.env
+.Python
+.foreman
+.coverage
+*.vagrant
+
+bin
+lib
+include

@@ -1,0 +1,91 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          gunicorn-<%= name %>
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Should-Start:      $all
+# Should-Stop:       $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Event-based HTTP/WSGI server (running <%= name %>)
+# Description:       Green Unicorn (gunicorn) is an HTTP/WSGI server designed
+#                    to serve fast clients or sleepy applications. That is to
+#                    say; behind a buffering front-end server such as nginx or
+#                    lighttpd. This instance runs <%= name %>.
+### END INIT INFO
+
+NAME=gunicorn-<%= name %>
+DESC=$NAME
+VENV=<%= venv %>
+SRC=<%= src %>
+DAEMON=$VENV/bin/gunicorn<% if django %>_django<% end %><% if paste %>_paster<% end %>
+<% if owner == 'undef' or group == 'undef' %>
+CHOWN=""
+<% else %>
+CHOWN="-c<%= owner %>:<%= group %>"
+<% end %>
+SOCKET=<%= socket %>
+RUNDIR=<%= rundir %>
+PIDFILE=<%= pidfile %>
+LOGFILE=<%= logfile %>
+WORKERS=<%= workers %>
+TIMEOUT=<%= timeout_seconds %>
+MODULE=<%= django ? django_settings : (paste ? paste_settings : wsgi_module) %>
+<% if conffile == '' %>
+CONFFILE=""
+<% else %>
+CONFFILE="-c <%= conffile %>"
+<% end %>
+
+DAEMON_OPTS="$CONFFILE -b $SOCKET -p $PIDFILE --log-file $LOGFILE \
+--workers $WORKERS -t $TIMEOUT --daemon --name $NAME $MODULE"
+
+test -x $DAEMON || exit 0
+
+set -e
+
+. /lib/lsb/init-functions
+
+if [ ! -d $RUNDIR ]; then
+  mkdir -p $RUNDIR
+  <% if owner != 'undef' and group != 'undef' %>
+  chown <%= owner %>:<%= group%> $RUNDIR
+  <% end %>
+fi
+
+case "$1" in
+  start)
+    echo -n "Starting $DESC: "
+    start-stop-daemon -S $CHOWN -q -p $PIDFILE -d $SRC \
+      -x $DAEMON -- $DAEMON_OPTS || true
+    echo "$NAME."
+	;;
+  stop)
+    echo -n "Stopping $DESC: "
+    start-stop-daemon -K -q -p $PIDFILE -s QUIT || true
+    echo "$NAME."
+	;;
+  restart)
+    echo -n "Restarting $DESC: "
+    start-stop-daemon -K -q -p $PIDFILE -s QUIT || true
+    sleep 1
+    start-stop-daemon -S $CHOWN -q -p $PIDFILE -d $SRC \
+      -x $DAEMON -- $DAEMON_OPTS || true
+    echo "$NAME."
+	;;
+  reload)
+    echo -n "Reloading $DESC: "
+    start-stop-daemon -K -q -p $PIDFILE -s HUP || true
+    echo "$NAME."
+	;;
+  status)
+    status_of_proc -p $PIDFILE "$DAEMON" $NAME && exit 0 || exit $?
+	;;
+  *)
+	echo "Usage: $NAME {start|stop|restart|status}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

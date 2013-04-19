@@ -1,0 +1,85 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          gunicorn-<%= name %>
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the gunicorn server for <%= name %>
+# Description:       starts the gunicorn server for <%= name %>
+### END INIT INFO
+
+NAME=gunicorn-<%= name %>
+DESC=$NAME
+VENV=<%= venv %>
+SRC=<%= src %>
+DAEMON=$VENV/bin/gunicorn<% if django %>_django<% end %><% if paste %>_paster<% end %>
+<% if owner == 'undef' or group == 'undef' %>
+CHOWN=""
+<% else %>
+CHOWN="--user <%= owner %>"
+<% end %>
+SOCKET=<%= socket %>
+RUNDIR=<%= rundir %>
+PIDFILE=<%= pidfile %>
+LOGFILE=<%= logfile %>
+WORKERS=<%= workers %>
+TIMEOUT=<%= timeout_seconds %>
+MODULE=<%= django ? django_settings : (paste ? paste_settings : wsgi_module) %>
+<% if conffile == '' %>
+CONFFILE=""
+<% else %>
+CONFFILE="-c <%= conffile %>"
+<% end %>
+
+DAEMON_OPTS="$CONFFILE -b $SOCKET -p $PIDFILE --log-file $LOGFILE \
+--workers $WORKERS -t $TIMEOUT --daemon --name $NAME $MODULE"
+
+test -x $DAEMON || exit 0
+
+. /etc/rc.d/init.d/functions
+
+set -e
+
+if [ ! -d $RUNDIR ]; then
+  mkdir -p $RUNDIR
+  <% if owner != 'undef' and group != 'undef' %>
+  chown <%= owner %>:<%= group%> $RUNDIR
+  <% end %>
+fi
+
+case "$1" in
+  start)
+    echo -n "Starting $DESC: "
+    cd $SRC
+    daemon $CHOWN --pidfile $PIDFILE $DAEMON $DAEMON_OPTS || true
+    echo "$NAME."
+	;;
+  stop)
+    echo -n "Stopping $DESC: "
+    killproc -p $PIDFILE -QUIT $NAME || true
+    echo "$NAME."
+	;;
+  restart)
+    echo -n "Restarting $DESC: "
+    killproc -p $PIDFILE -QUIT $NAME || true
+    sleep 1
+    cd $SRC
+    daemon $CHOWN --pidfile $PIDFILE $DAEMON $DAEMON_OPTS || true
+    echo "$NAME."
+	;;
+  reload)
+    echo -n "Reloading $DESC: "
+    killproc -p $PIDFILE -HUP $NAME || true
+    echo "$NAME."
+	;;
+  status)
+    status -p $PIDFILE $name || exit $?
+	;;
+  *)
+	echo "Usage: $NAME {start|stop|restart|status}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
