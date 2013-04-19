@@ -32,7 +32,9 @@ def hello():
     if not url:
         return "Woof woof!"
     # Open redis.
-    r = redis.StrictRedis()
+    r = redis.StrictRedis(
+        host=REDIS_URL.hostname, port=REDIS_URL.port,
+        password=REDIS_URL.password)
     # Have we already cached the image?
     cached = r.get(url)
     if cached:
