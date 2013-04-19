@@ -14,7 +14,6 @@ To bootup the VM use:
 Setup an .env file with the following....
 
     DEVELOPMENT=True
-    REDIS_URL=redis://:@localhost:6379/
 
 Now you can to start the server run
 

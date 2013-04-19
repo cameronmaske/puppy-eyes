@@ -10,7 +10,7 @@ from flask import Flask, request, send_file
 # initialization
 #----------------------------------------
 
-REDIS_URL = urlparse.urlparse(os.environ.get('REDIS_URL', 'redis://:@localhost:6379/'))
+REDIS_URL = urlparse.urlparse(os.environ.get('REDISCLOUD_URL', 'redis://:@localhost:6379/'))
 
 app = Flask(__name__)
 
