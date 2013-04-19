@@ -39,11 +39,10 @@ def hello():
         # Have we already cached the image?
         cached = r.get(url)
         if cached:
-            print "Got image from cache."
+            # Get the image out of the cache.
             buffer_image = StringIO(cached)
             buffer_image.seek(0)
         else:
-            print "Downloading image."
             # Download the image.
             response = requests.get(url)
             # Open the image.
@@ -56,17 +55,18 @@ def hello():
             ratio = float(current_width) / float(current_height)
             # Determine a new hegiht.
             height = int(desired_width / ratio)
-
             buffer_image = StringIO()
             resized_image = image.resize((desired_width, height), Image.ANTIALIAS)
             resized_image.save(buffer_image, 'JPEG', quality=90)
             buffer_image.seek(0)
+            # Store the image in redis, set to expire in 5 hours.
+
             r.setex(url, (60*60*5), buffer_image.getvalue())
         # Serve the image.
         return send_file(buffer_image, mimetype='image/jpeg')
-    except Exception as e:
-        print e
-        # Something we horribly wrong. Let's just redirect them to the url.
+    except:
+        # If something went horribly wrong.
+        # Let's just redirect them to the url.
         return redirect(url)
 
 
