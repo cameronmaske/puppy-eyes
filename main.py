@@ -18,14 +18,11 @@ app = Flask(__name__)
 if os.environ.get('DEVELOPMENT'):
     app.config['DEBUG'] = True
 else:
-    app.config['DEBUG'] = True
-
+    app.config['DEBUG'] = False
 
 #----------------------------------------
-# Routes
+# Helper functions.
 #----------------------------------------
-
-
 def ratio(height, width):
     ratio = float(width) / float(height)
     return ratio
@@ -60,6 +57,9 @@ def measurements(image, width=None, height=None):
     return (width, height)
 
 
+#----------------------------------------
+# Routes
+#----------------------------------------
 @app.route("/")
 def hello():
     url = request.args.get('link')
