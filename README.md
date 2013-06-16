@@ -3,6 +3,20 @@ Puppy eyes
 
 A simple image resizer service in flask using redis.
 
+Demo
+-------
+
+Try the [demo](http://puppy-eyes.herokuapp.com/)!
+
+On the demo site (or you local copy) you can turn this huge (1620 x 1080 image)
+
+    http://images.cdn.fotopedia.com/flickr-4657421042-hd.jpg
+
+Into a tiny one!
+
+    http://puppy-eyes.herokuapp.com/?link=http://images.cdn.fotopedia.com/flickr-4657421042-hd.jpg
+
+
 Install
 -------
 
@@ -20,19 +34,9 @@ Now you can start running the dev server by...
     vagrant ssh
     python puppy-eyes/main.py
                or
+    vagrant ssh
     cd puppy-eyes
     foreman start -f Procfile-dev -p 8001
-
-Example
--------
-
-With your development server running, you can turn this huge (1620 x 1080 image)
-
-    http://images.cdn.fotopedia.com/flickr-4657421042-hd.jpg
-
-Into a tiny one!
-
-    http://localhost:8000/?url=http://images.cdn.fotopedia.com/flickr-4657421042-hd.jpg
 
 
 
